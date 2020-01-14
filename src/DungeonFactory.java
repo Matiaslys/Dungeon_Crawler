@@ -1,4 +1,5 @@
 import com.almasb.fxgl.dsl.FXGL;
+import com.almasb.fxgl.dsl.components.HealthIntComponent;
 import com.almasb.fxgl.dsl.components.OffscreenCleanComponent;
 import com.almasb.fxgl.dsl.components.ProjectileComponent;
 import com.almasb.fxgl.entity.Entity;
@@ -81,6 +82,7 @@ public class DungeonFactory implements EntityFactory {
                 .type(DungeonType.Player)
                 .viewWithBBox(new Rectangle(12.50, 13, Color.BLUE))
                 .with(physics)
+                .with(new HealthIntComponent(100))
                 .with(new CollidableComponent(true))
                 .with(new PlayerControl())
                 .build();
@@ -88,7 +90,7 @@ public class DungeonFactory implements EntityFactory {
 
     @Spawns("PlayerBullet")
     public Entity newPlayerBullet (SpawnData data) {
-
+        int Damage = 1;
         return FXGL.entityBuilder()
                 .from(data)
                 .type(DungeonType.PlayerBullet)
