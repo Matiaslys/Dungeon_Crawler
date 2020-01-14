@@ -1,13 +1,15 @@
 import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
-import com.almasb.fxgl.app.Viewport;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
+import com.almasb.fxgl.entity.SpawnData;
 import com.almasb.fxgl.entity.level.Level;
 import com.almasb.fxgl.entity.level.tiled.TMXLevelLoader;
 import com.almasb.fxgl.input.UserAction;
+import com.almasb.fxgl.physics.CollisionHandler;
 import javafx.scene.input.KeyCode;
-
+import javafx.scene.input.MouseButton;
+import javafx.scene.paint.Color;
 import java.io.File;
 import java.net.MalformedURLException;
 
@@ -19,9 +21,12 @@ public class DungeonApp extends GameApplication {
     @Override
     protected void initSettings(GameSettings settings) {
         settings.setWidth(25 * 16);
-        settings.setHeight(26 * 16);
+        settings.setHeight(25 * 16);
+//        settings.setWidth(1920);
+//        settings.setHeight(1080);
         settings.setFullScreenAllowed(true);
         settings.setFullScreenFromStart(true);
+        settings.setDeveloperMenuEnabled(true);
     }
     private Entity player;
 
@@ -71,12 +76,20 @@ public class DungeonApp extends GameApplication {
                 player.getComponent(PlayerControl.class).downStop();
             }
         }, KeyCode.S);
+
+        getInput().addAction(new UserAction("Shoot") {
+            @Override
+            protected void onAction() {
+                player.getComponent(PlayerControl.class).shoot();
+            }
+        }, MouseButton.PRIMARY);
     }
 
     @Override
     protected void initGame() {
         FXGL.getGameWorld().addEntityFactory(new DungeonFactory());
-        var levelFile = new File("C:\\Users\\matia\\IdeaProjects\\Dungeon Crawler\\src\\assets\\tmx\\Dungeon Crawler2.tmx");
+        FXGL.getGameScene().setBackgroundColor(Color.rgb(5,0,18));
+        var levelFile = new File("C:\\Users\\Matias\\Desktop\\Datamatiker\\Dungeon_Crawler\\src\\assets\\tmx\\Dungeon Crawler2.tmx");
         Level level;
         try {
             level = new TMXLevelLoader().load(levelFile.toURI().toURL(), FXGL.getGameWorld());
@@ -85,14 +98,48 @@ public class DungeonApp extends GameApplication {
             e.printStackTrace();
         }
 
+        SpawnData data = new SpawnData(FXGL.getGameWorld().getSingleton(DungeonType.Spawn).getPosition());
+        player = FXGL.getGameWorld().spawn("Player", data);
 
-        player = FXGL.getGameWorld().spawn("Spawn", 160, 50);
-
-        getGameScene().getViewport().setBounds(0, 0, getAppWidth(), getAppHeight());
         getGameScene().getViewport().bindToEntity(player, getAppWidth() / 2, getAppHeight() / 2);
 
-        FXGL.getGameWorld().spawn("Enemy Spawn");
         FXGL.getPhysicsWorld().setGravity(0,0);
+    }
+
+    @Override
+    protected void initPhysics() {
+        getPhysicsWorld().addCollisionHandler(new CollisionHandler(DungeonType.PlayerBullet, DungeonType.Wall) {
+            @Override
+            protected void onCollisionBegin(Entity PlayerBullet, Entity Wall) {
+                PlayerBullet.removeFromWorld();
+            }
+        });
+        getPhysicsWorld().addCollisionHandler(new CollisionHandler(DungeonType.EnemyBullet, DungeonType.Wall) {
+            @Override
+            protected void onCollisionBegin(Entity EnemyBullet, Entity Wall) {
+                EnemyBullet.removeFromWorld();
+            }
+        });
+        getPhysicsWorld().addCollisionHandler(new CollisionHandler(DungeonType.EnemyBullet, DungeonType.Player) {
+            @Override
+            protected void onCollisionBegin(Entity EnemyBullet, Entity Player) {
+                EnemyBullet.removeFromWorld();
+            }
+        });
+
+        getPhysicsWorld().addCollisionHandler(new CollisionHandler(DungeonType.Player, DungeonType.EnemyBullet) {
+            @Override
+            protected void onCollisionBegin(Entity Player, Entity EnemyBullet) {
+                EnemyBullet.removeFromWorld();
+            }
+        });
+
+        getPhysicsWorld().addCollisionHandler(new CollisionHandler(DungeonType.PlayerBullet, DungeonType.EnemySpawn) {
+            @Override
+            protected void onCollisionBegin(Entity PlayerBullet, Entity EnemySpawn) {
+                PlayerBullet.removeFromWorld();
+            }
+        });
     }
 
     public static void main(String[] args) {
