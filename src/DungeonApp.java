@@ -124,26 +124,7 @@ public class DungeonApp extends GameApplication {
         hpBar.setMinValue(0);
         hpBar.setMaxValue(hp.getValue());
         hpBar.currentValueProperty().bind(hp.valueProperty());
-        hpBar.setLayoutX(3);
-        hpBar.setLayoutY(1);
-        hpBar.setWidth(50);
-        hpBar.setHeight(10);
-        hpBar.setLabelVisible(true);
-        hpBar.setLabelPosition(Position.LEFT);
-        hpBar.setFill(Color.GREEN);
-        hpBar.setTraceFill(Color.GREEN.brighter());
-
-        getGameScene().addUINode(hpBar);
-    }
-
-    private void PlayerHP() {
-
-        ProgressBar hpBar = ProgressBar.makeHPBar();
-        hpBar.setMinValue(0);
-        hpBar.setMaxValue(100);
-        hpBar.setCurrentValue(100);
-        hpBar.setLayoutX(3);
-        hpBar.setLayoutY(1);
+        hpBar.setLayoutY(10);
         hpBar.setWidth(50);
         hpBar.setHeight(10);
         hpBar.setLabelVisible(true);

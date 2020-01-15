@@ -2,11 +2,13 @@ import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.SpawnData;
 import com.almasb.fxgl.entity.component.Component;
+import com.almasb.fxgl.physics.PhysicsComponent;
 import com.almasb.fxgl.time.LocalTimer;
 import javafx.geometry.Point2D;
 import javafx.util.Duration;
 
 public class EnemyControl extends Component {
+    private PhysicsComponent physics;
     private LocalTimer shootTimer;
 
     @Override
@@ -26,6 +28,32 @@ public class EnemyControl extends Component {
                         shootTimer.capture();
                     });
         }
+
+    }
+
+    public void left () {
+        physics.setVelocityX(-40);
+    }
+    public void right () {
+        physics.setVelocityX(40);
+    }
+    public void up () {
+        physics.setVelocityY(-40);
+    }
+    public void down () {
+        physics.setVelocityY(40);
+    }
+    public void leftStop () {
+        physics.setVelocityX(0);
+    }
+    public void rightStop () {
+        physics.setVelocityX(0);
+    }
+    public void upStop () {
+        physics.setVelocityY(0);
+    }
+    public void downStop () {
+        physics.setVelocityY(0);
     }
 
 
