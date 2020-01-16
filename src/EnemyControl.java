@@ -42,10 +42,10 @@ public class EnemyControl extends Component {
 
 
         if (move.elapsed(Duration.seconds(2))) {
-            left();
-            right();
-            up();
-            down();
+//            left();
+//            right();
+//            up();
+//            down();
             random.nextInt(5);
             move.capture();
         }
