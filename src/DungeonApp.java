@@ -1,5 +1,6 @@
 import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
+import com.almasb.fxgl.app.MenuItem;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.dsl.components.HealthIntComponent;
 import com.almasb.fxgl.entity.Entity;
@@ -8,13 +9,18 @@ import com.almasb.fxgl.entity.level.Level;
 import com.almasb.fxgl.entity.level.tiled.TMXLevelLoader;
 import com.almasb.fxgl.input.UserAction;
 import com.almasb.fxgl.physics.CollisionHandler;
+import com.almasb.fxgl.time.LocalTimer;
 import com.almasb.fxgl.ui.Position;
 import com.almasb.fxgl.ui.ProgressBar;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
+import javafx.util.Duration;
+
 import java.io.File;
 import java.net.MalformedURLException;
+import java.util.Objects;
+import java.util.Optional;
 
 import static com.almasb.fxgl.dsl.FXGLForKtKt.*;
 import static com.almasb.fxgl.dsl.FXGLForKtKt.getAppHeight;
@@ -30,14 +36,11 @@ public class DungeonApp extends GameApplication {
 //        settings.setHeight(1080);
         settings.setFullScreenAllowed(true);
         settings.setFullScreenFromStart(true);
-        settings.setPixelsPerMeter(60);
+        settings.setDeveloperMenuEnabled(true);
     }
-    private int lifeEnemy = 1;
-    private static int lifeplayer = 100;
-    private int Damage;
-    private Entity player;
-
+    static Entity player;
     @Override
+
     protected void initInput() {
 
         getInput().addAction(new UserAction("Left") {
@@ -92,31 +95,8 @@ public class DungeonApp extends GameApplication {
         }, MouseButton.PRIMARY);
     }
 
-
     @Override
-    protected void initGame() {
-        FXGL.getGameWorld().addEntityFactory(new DungeonFactory());
-        FXGL.getGameScene().setBackgroundColor(Color.rgb(5,0,18));
-        var levelFile = new File("C:\\Users\\Matias\\Desktop\\Datamatiker\\Dungeon_Crawler\\src\\assets\\tmx\\Dungeon Crawler2.tmx");
-        Level level;
-        try {
-            level = new TMXLevelLoader().load(levelFile.toURI().toURL(), FXGL.getGameWorld());
-            FXGL.getGameWorld().setLevel(level);
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        }
-
-
-            SpawnData data = new SpawnData(FXGL.getGameWorld().getSingleton(DungeonType.Spawn).getPosition());
-            player = FXGL.getGameWorld().spawn("Player", data);
-
-            getGameScene().getViewport().bindToEntity(player, getAppWidth() / 2, getAppHeight() / 2);
-            FXGL.getPhysicsWorld().setGravity(0, 0);
-
-    }
-
-    @Override
-    protected void initUI() {
+    public void initUI() {
 
         HealthIntComponent hp = player.getComponent(HealthIntComponent.class);
 
@@ -133,7 +113,29 @@ public class DungeonApp extends GameApplication {
         hpBar.setTraceFill(Color.GREEN.brighter());
 
         getGameScene().addUINode(hpBar);
+
     }
+    @Override
+    protected void initGame() {
+        FXGL.getGameWorld().addEntityFactory(new DungeonFactory());
+        FXGL.getGameScene().setBackgroundColor(Color.rgb(5,0,18));
+        var levelFile = new File("C:\\Users\\matia\\IdeaProjects\\Dungeon Crawler\\src\\assets\\tmx\\Dungeon Crawler2.tmx");
+        Level level;
+        try {
+            level = new TMXLevelLoader().load(levelFile.toURI().toURL(), FXGL.getGameWorld());
+            FXGL.getGameWorld().setLevel(level);
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+
+            SpawnData data = new SpawnData(FXGL.getGameWorld().getSingleton(DungeonType.Spawn).getPosition());
+            player = FXGL.getGameWorld().spawn("Player", data);
+
+            getGameScene().getViewport().bindToEntity(player, getAppWidth() / 2, getAppHeight() / 2);
+            FXGL.getPhysicsWorld().setGravity(0, 0);
+
+    }
+
 
     @Override
     protected void initPhysics() {
@@ -149,35 +151,40 @@ public class DungeonApp extends GameApplication {
                 EnemyBullet.removeFromWorld();
             }
         });
+        getPhysicsWorld().addCollisionHandler(new CollisionHandler(DungeonType.Enemy, DungeonType.Player) {
+            @Override
+            protected void onCollisionBegin(Entity Enemy, Entity Player) {
+                player.getComponent(HealthIntComponent.class).restoreFully();
+            }
+        });
+
+
         getPhysicsWorld().addCollisionHandler(new CollisionHandler(DungeonType.EnemyBullet, DungeonType.Player) {
             @Override
             protected void onCollisionBegin(Entity EnemyBullet, Entity Player) {
-                player.getComponent(HealthIntComponent.class).damage(10);
-                int hp = player.getComponent(HealthIntComponent.class).getValue();
                 EnemyBullet.removeFromWorld();
 
+                player.getComponent(HealthIntComponent.class).damage(10);
 
+            }
+        });
+//        getGameScene().getGameWorld().getEntityByID("Enemy",20).get().getX() ,getGameScene().getGameWorld().getEntityByID("Enemy",20).get().getY()
+        getPhysicsWorld().addCollisionHandler(new CollisionHandler(DungeonType.PlayerBullet, DungeonType.Enemy) {
+            @Override
+            protected void onCollisionBegin(Entity PlayerBullet, Entity Enemy) {
+                Enemy.getComponent(HealthIntComponent.class).damage(1);
+                int hp = Enemy.getComponent(HealthIntComponent.class).getValue();
+                PlayerBullet.removeFromWorld();
                 if (hp <= 0) {
-                    getDisplay().showMessageBox("You Died!");
-                    player.removeFromWorld();
-                    player.getComponent(HealthIntComponent.class).restoreFully();
-                    SpawnData data = new SpawnData(FXGL.getGameWorld().getSingleton(DungeonType.Spawn).getPosition());
-                    player = FXGL.getGameWorld().spawn("Player", data);
-                    getGameScene().getViewport().bindToEntity(player, getAppWidth() / 2, getAppHeight() / 2);
-
+                    Enemy.removeFromWorld();
                 }
             }
         });
 
-        getPhysicsWorld().addCollisionHandler(new CollisionHandler(DungeonType.PlayerBullet, DungeonType.EnemySpawn) {
+        getPhysicsWorld().addCollisionHandler(new CollisionHandler(DungeonType.Player, DungeonType.Door) {
             @Override
-            protected void onCollisionBegin(Entity PlayerBullet, Entity EnemySpawn) {
-                Damage = 1;
-                lifeEnemy = lifeEnemy - Damage;
-                PlayerBullet.removeFromWorld();
-                if (lifeEnemy <= 0) {
-                    EnemySpawn.removeFromWorld();
-                }
+            protected void onCollisionBegin(Entity Player, Entity Door) {
+            getDisplay().showMessageBox("You Escaped");
             }
         });
     }

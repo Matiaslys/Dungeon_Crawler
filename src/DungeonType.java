@@ -1,3 +1,3 @@
 public enum DungeonType {
- Wall, Door, EnemySpawn, Spawn, Player, PlayerBullet, EnemyBullet
+ Wall, Door, Spawn, Player, PlayerBullet, EnemyBullet, Enemy
 }

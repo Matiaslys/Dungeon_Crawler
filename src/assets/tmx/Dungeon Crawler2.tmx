@@ -49,9 +49,9 @@
   <object id="13" name="Wall" type="Wall" x="384" y="240" width="16" height="160"/>
   <object id="14" name="Door" type="Door" x="192" y="400" width="16" height="16"/>
   <object id="16" type="Spawn" x="153" y="41.5" width="12.5" height="13"/>
-  <object id="18" type="Enemy Spawn" x="336" y="320" width="11" height="11.5"/>
-  <object id="19" type="Enemy Spawn" x="75" y="343" width="11" height="11.5"/>
-  <object id="20" type="Enemy Spawn" x="129.217" y="245.357" width="11" height="11.5"/>
-  <object id="21" type="Enemy Spawn" x="176.141" y="245.602" width="11" height="11.5"/>
+  <object id="18" type="Enemy" x="336" y="320" width="11" height="11.5"/>
+  <object id="19" type="Enemy" x="75" y="343" width="11" height="11.5"/>
+  <object id="20" type="Enemy" x="129.217" y="245.357" width="11" height="11.5"/>
+  <object id="21" type="Enemy" x="176.141" y="245.602" width="11" height="11.5"/>
  </objectgroup>
 </map>
