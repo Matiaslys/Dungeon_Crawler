@@ -1,6 +1,5 @@
 import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
-import com.almasb.fxgl.app.MenuItem;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.dsl.components.HealthIntComponent;
 import com.almasb.fxgl.entity.Entity;
@@ -9,18 +8,14 @@ import com.almasb.fxgl.entity.level.Level;
 import com.almasb.fxgl.entity.level.tiled.TMXLevelLoader;
 import com.almasb.fxgl.input.UserAction;
 import com.almasb.fxgl.physics.CollisionHandler;
-import com.almasb.fxgl.time.LocalTimer;
 import com.almasb.fxgl.ui.Position;
 import com.almasb.fxgl.ui.ProgressBar;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
-import javafx.util.Duration;
-
 import java.io.File;
 import java.net.MalformedURLException;
-import java.util.Objects;
-import java.util.Optional;
+
 
 import static com.almasb.fxgl.dsl.FXGLForKtKt.*;
 import static com.almasb.fxgl.dsl.FXGLForKtKt.getAppHeight;
@@ -32,8 +27,6 @@ public class DungeonApp extends GameApplication {
     protected void initSettings(GameSettings settings) {
         settings.setWidth(25 * 16);
         settings.setHeight(25 * 16);
-//        settings.setWidth(1920);
-//        settings.setHeight(1080);
         settings.setFullScreenAllowed(true);
         settings.setFullScreenFromStart(true);
         settings.setDeveloperMenuEnabled(true);
@@ -119,7 +112,7 @@ public class DungeonApp extends GameApplication {
     protected void initGame() {
         FXGL.getGameWorld().addEntityFactory(new DungeonFactory());
         FXGL.getGameScene().setBackgroundColor(Color.rgb(5,0,18));
-        var levelFile = new File("C:\\Users\\matia\\IdeaProjects\\Dungeon Crawler\\src\\assets\\tmx\\Dungeon Crawler2.tmx");
+        var levelFile = new File("C:\\Users\\Matias\\Desktop\\Datamatiker\\Dungeon_Crawler\\src\\assets\\tmx\\Dungeon Crawler2.tmx");
         Level level;
         try {
             level = new TMXLevelLoader().load(levelFile.toURI().toURL(), FXGL.getGameWorld());
@@ -164,11 +157,9 @@ public class DungeonApp extends GameApplication {
             protected void onCollisionBegin(Entity EnemyBullet, Entity Player) {
                 EnemyBullet.removeFromWorld();
 
-                player.getComponent(HealthIntComponent.class).damage(10);
-
+                player.getComponent(PlayerControl.class).playerHit();
             }
         });
-//        getGameScene().getGameWorld().getEntityByID("Enemy",20).get().getX() ,getGameScene().getGameWorld().getEntityByID("Enemy",20).get().getY()
         getPhysicsWorld().addCollisionHandler(new CollisionHandler(DungeonType.PlayerBullet, DungeonType.Enemy) {
             @Override
             protected void onCollisionBegin(Entity PlayerBullet, Entity Enemy) {
@@ -178,6 +169,7 @@ public class DungeonApp extends GameApplication {
                 if (hp <= 0) {
                     Enemy.removeFromWorld();
                 }
+
             }
         });
 
@@ -187,6 +179,22 @@ public class DungeonApp extends GameApplication {
             getDisplay().showMessageBox("You Escaped");
             }
         });
+    }
+
+    public void setlevel(String level) {
+        FXGL.setLevelFromMap(level);
+
+        SpawnData data = new SpawnData(FXGL.getGameWorld().getSingleton(DungeonType.Spawn).getPosition());
+        DungeonApp.player = FXGL.getGameWorld().spawn("Player", data);
+        getGameScene().getViewport().bindToEntity(DungeonApp.player, getAppWidth() / 2, getAppHeight() / 2);
+
+        getGameScene().clearUINodes();
+        initUI();
+    }
+
+    public void playerDeath() {
+        getDisplay().showMessageBox("You Died!");
+        setlevel("Dungeon Crawler2.tmx");
     }
 
 

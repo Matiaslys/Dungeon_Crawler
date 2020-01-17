@@ -27,42 +27,41 @@ public class PlayerControl extends Component {
 
     @Override
     public void onUpdate(double tpf) {
-        if (DungeonApp.player.getComponent(HealthIntComponent.class).isZero()) {
-            getDisplay().showMessageBox("You Died!");
-            DungeonApp.player.getComponent(HealthIntComponent.class).restoreFully();
-            DungeonApp.player.removeFromWorld();
-
-            SpawnData data = new SpawnData(FXGL.getGameWorld().getSingleton(DungeonType.Spawn).getPosition());
-            DungeonApp.player = FXGL.getGameWorld().spawn("Player", data);
-            getGameScene().getViewport().bindToEntity(DungeonApp.player, getAppWidth() / 2, getAppHeight() / 2);
-
-
-//                    Optional<Entity> Enemy1 = getGameScene().getGameWorld().getEntityByID("Enemy", 18);
-//                    Optional<Entity> Enemy2 = getGameScene().getGameWorld().getEntityByID("Enemy",19);
-//                    Optional<Entity> Enemy3 = getGameScene().getGameWorld().getEntityByID("Enemy",20);
-//                    Optional<Entity> Enemy4 = getGameScene().getGameWorld().getEntityByID("Enemy",21);
+////        if (DungeonApp.player.getComponent(HealthIntComponent.class).isZero()) {
+//////            FXGL.<DungeonApp>getAppCast().playerDeath();
+////            DungeonApp.player.removeFromWorld();
+////            DungeonApp.player.getComponent(HealthIntComponent.class).restoreFully();
+////            SpawnData data = new SpawnData(FXGL.getGameWorld().getSingleton(DungeonType.Spawn).getPosition());
+////            DungeonApp.player = FXGL.getGameWorld().spawn("Player", data);
+////            getGameScene().getViewport().bindToEntity(DungeonApp.player, getAppWidth() / 2, getAppHeight() / 2);
 //
 //
-//                     Enemy1.get().activeProperty();
+////                    Optional<Entity> Enemy1 = getGameScene().getGameWorld().getEntityByID("Enemy", 18);
+////                    Optional<Entity> Enemy2 = getGameScene().getGameWorld().getEntityByID("Enemy",19);
+////                    Optional<Entity> Enemy3 = getGameScene().getGameWorld().getEntityByID("Enemy",20);
+////                    Optional<Entity> Enemy4 = getGameScene().getGameWorld().getEntityByID("Enemy",21);
+////
+////
+////                     Enemy1.get().activeProperty();
+////
+////
+////
+////                    if (Enemy1.isEmpty()) {
+////                        FXGL.getGameWorld().spawn("Enemy",336, 320);
+////                    }
+////                    if (Enemy2.isEmpty()) {
+////                        FXGL.getGameWorld().spawn("Enemy",75 ,343);
+////                    }
+////                    if (Enemy3.isEmpty()) {
+////                        FXGL.getGameWorld().spawn("Enemy",129.217 ,245.357);
+////                    }
+////                    if (Enemy4.isEmpty()) {
+////                        FXGL.getGameWorld().spawn("Enemy",176.141 ,245.602);
+////                    }
 //
 //
 //
-//                    if (Enemy1.isEmpty()) {
-//                        FXGL.getGameWorld().spawn("Enemy",336, 320);
-//                    }
-//                    if (Enemy2.isEmpty()) {
-//                        FXGL.getGameWorld().spawn("Enemy",75 ,343);
-//                    }
-//                    if (Enemy3.isEmpty()) {
-//                        FXGL.getGameWorld().spawn("Enemy",129.217 ,245.357);
-//                    }
-//                    if (Enemy4.isEmpty()) {
-//                        FXGL.getGameWorld().spawn("Enemy",176.141 ,245.602);
-//                    }
-
-
-
-        }
+//        }
 
     }
 
@@ -100,6 +99,14 @@ public class PlayerControl extends Component {
         }
         public void downStop () {
             physics.setVelocityY(0);
+        }
+
+        public void playerHit() {
+            entity.getComponent(HealthIntComponent.class).damage(10);
+
+            if (entity.getComponent(HealthIntComponent.class).isZero()) {
+                FXGL.<DungeonApp>getAppCast().playerDeath();
+            }
         }
 
     }

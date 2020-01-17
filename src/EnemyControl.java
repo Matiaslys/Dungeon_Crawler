@@ -2,22 +2,23 @@ import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.SpawnData;
 import com.almasb.fxgl.entity.component.Component;
-import com.almasb.fxgl.entity.level.Level;
-import com.almasb.fxgl.pathfinding.astar.*;
 import com.almasb.fxgl.physics.PhysicsComponent;
 import com.almasb.fxgl.time.LocalTimer;
 import javafx.geometry.Point2D;
-import javafx.scene.control.Control;
+
 import javafx.util.Duration;
 
-import java.sql.Array;
-import java.util.ArrayList;
+import java.util.Optional;
 import java.util.Random;
+
+import static com.almasb.fxgl.dsl.FXGLForKtKt.getGameScene;
 
 public class EnemyControl extends Component {
     private PhysicsComponent physics;
     private LocalTimer shootTimer;
     private LocalTimer move;
+    private LocalTimer movestop;
+    boolean Guard;
     boolean melee;
 
 
@@ -27,6 +28,8 @@ public class EnemyControl extends Component {
         shootTimer.capture();
         move = FXGL.newLocalTimer();
         move.capture();
+        movestop = FXGL.newLocalTimer();
+        movestop.capture();
     }
     Random random = new Random();
     @Override
@@ -39,17 +42,48 @@ public class EnemyControl extends Component {
                         shootTimer.capture();
                     });
         }
+        int randommove = (int) (Math.random() * 4 + 1);
 
+            if (move.elapsed(Duration.seconds(2))) {
+                movestop.capture();
+                switch (randommove) {
+                    case 1:
+                        left();
 
-        if (move.elapsed(Duration.seconds(2))) {
-//            left();
-//            right();
-//            up();
-//            down();
-            random.nextInt(5);
-            move.capture();
+                        FXGL.runOnce(() -> {
+                            leftStop();
+                        }, Duration.seconds(0.5));
+                        break;
+                    case 2:
+                        right();
+                        FXGL.runOnce(() -> {
+                            rightStop();
+                        }, Duration.seconds(0.5));
+                        break;
+                    case 3:
+                        up();
+
+                        FXGL.runOnce(() -> {
+                            upStop();
+                        }, Duration.seconds(0.5));
+                        break;
+                    case 4:
+                        down();
+                        FXGL.runOnce(() -> {
+                            downStop();
+                        }, Duration.seconds(0.5));
+                        break;
+                }
+                move.capture();
+                movestop.capture();
+            }
+            if  ((DungeonApp.player.getY() - entity.getY() > 0) && (DungeonApp.player.getY() - entity.getY() < 640) && (DungeonApp.player.getY() - entity.getY() > DungeonApp.player.getX() - entity.getX())) {
+
         }
     }
+
+
+
 
     public void left () {
         physics.setVelocityX(-40);
@@ -84,20 +118,5 @@ public class EnemyControl extends Component {
         data.put("direction", direction);
         Entity bullet = FXGL.spawn("EnemyBullet", data);
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 }
