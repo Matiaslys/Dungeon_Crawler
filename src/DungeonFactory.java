@@ -15,6 +15,9 @@ import com.almasb.fxgl.physics.box2d.dynamics.BodyType;
 import com.almasb.fxgl.physics.box2d.dynamics.FixtureDef;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.util.Duration;
+
+import static com.almasb.fxgl.dsl.FXGLForKtKt.texture;
 
 
 public class DungeonFactory implements EntityFactory {
@@ -55,7 +58,8 @@ public class DungeonFactory implements EntityFactory {
         return FXGL.entityBuilder()
                 .from(data)
                 .type(DungeonType.Enemy)
-                .viewWithBBox(new Rectangle(11 ,11.5,  Color.RED))
+                .bbox(new HitBox(BoundingShape.box(25,29)))
+//                .viewWithBBox(new Rectangle(11 ,11.5,  Color.RED))
                 .with(physics)
                 .with(new HealthIntComponent(1))
                 .with(new CollidableComponent(true))
@@ -73,6 +77,16 @@ public class DungeonFactory implements EntityFactory {
 
     }
 
+    @Spawns("Damage")
+    public Entity newDamage (SpawnData data) {
+        return FXGL.entityBuilder()
+                .type(DungeonType.Damage)
+                .from(data)
+                .bbox(new HitBox(BoundingShape.box(data.<Integer>get("width") , data.<Integer>get("height"))))
+                .build();
+
+    }
+
     @Spawns("Player")
     public Entity newPlayer (SpawnData data) {
         PhysicsComponent physics = new PhysicsComponent();
@@ -81,7 +95,8 @@ public class DungeonFactory implements EntityFactory {
         return FXGL.entityBuilder()
                 .from(data)
                 .type(DungeonType.Player)
-                .viewWithBBox(new Rectangle(12.50, 13, Color.BLUE))
+                .bbox(new HitBox(BoundingShape.box(25,39)))
+//                .viewWithBBox(new Rectangle(12.50, 13, Color.BLUE))
                 .with(physics)
                 .with(new HealthIntComponent(100))
                 .with(new CollidableComponent(true))
@@ -91,7 +106,6 @@ public class DungeonFactory implements EntityFactory {
 
     @Spawns("PlayerBullet")
     public Entity newPlayerBullet (SpawnData data) {
-        int Damage = 1;
         return FXGL.entityBuilder()
                 .from(data)
                 .type(DungeonType.PlayerBullet)
