@@ -74,15 +74,47 @@ public class DungeonFactory implements EntityFactory {
                 .from(data)
                 .bbox(new HitBox(BoundingShape.box(data.<Integer>get("width") , data.<Integer>get("height"))))
                 .build();
+    }
+
+    @Spawns("BossBattle ")
+    public Entity newBossBattle  (SpawnData data) {
+        return FXGL.entityBuilder()
+                .type(DungeonType.BossBattle)
+                .from(data)
+                .bbox(new HitBox(BoundingShape.box(data.<Integer>get("width") , data.<Integer>get("height"))))
+                .build();
 
     }
 
-    @Spawns("Damage")
-    public Entity newDamage (SpawnData data) {
+    @Spawns("EnemySpawn")
+    public Entity newEnemySpawn (SpawnData data) {
         return FXGL.entityBuilder()
-                .type(DungeonType.Damage)
+                .type(DungeonType.EnemySpawn)
                 .from(data)
                 .bbox(new HitBox(BoundingShape.box(data.<Integer>get("width") , data.<Integer>get("height"))))
+                .build();
+
+    }
+
+    @Spawns("Boss(1)")
+    public Entity newBoss (SpawnData data) {
+        return FXGL.entityBuilder()
+                .type(DungeonType.Boss)
+                .from(data)
+                .bbox(new HitBox(BoundingShape.box(data.<Integer>get("width") , data.<Integer>get("height"))))
+                .with(new CollidableComponent(true))
+                .build();
+
+    }
+
+    @Spawns("FirstAid")
+    public Entity newFirstAid (SpawnData data) {
+        return FXGL.entityBuilder()
+                .type(DungeonType.FirstAid)
+                .from(data)
+                .view(texture("First Aid kit.png"))
+                .bbox(new HitBox(BoundingShape.box(26 , 24)))
+                .with(new CollidableComponent(true))
                 .build();
 
     }

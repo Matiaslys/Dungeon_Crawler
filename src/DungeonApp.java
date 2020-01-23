@@ -181,13 +181,16 @@ public class DungeonApp extends GameApplication {
                 EnemyBullet.removeFromWorld();
             }
         });
-        getPhysicsWorld().addCollisionHandler(new CollisionHandler(DungeonType.Enemy, DungeonType.Player) {
+
+        getPhysicsWorld().addCollisionHandler(new CollisionHandler(DungeonType.Player, DungeonType.FirstAid) {
             @Override
-            protected void onCollisionBegin(Entity Enemy, Entity Player) {
-                player.getComponent(HealthIntComponent.class).setValue(100);
+            protected void onCollisionBegin(Entity Player, Entity FirstAid) {
+                if (player.getComponent(HealthIntComponent.class).getValue() < player.getComponent(HealthIntComponent.class).getMaxValue()) {
+                    player.getComponent(HealthIntComponent.class).restore(50);
+                    FirstAid.removeFromWorld();
+                }
             }
         });
-
 
         getPhysicsWorld().addCollisionHandler(new CollisionHandler(DungeonType.EnemyBullet, DungeonType.Player) {
             @Override
@@ -253,6 +256,7 @@ public class DungeonApp extends GameApplication {
     private void nextLevel() {
         if (geti("level") == MAX_LEVEL) {
             getDisplay().showMessageBox("You finished the game!");
+            player.removeFromWorld();
             return;
         }
 
@@ -266,7 +270,9 @@ public class DungeonApp extends GameApplication {
     }
 
     public void setLevel(int levelNum) {
-
+        if (DEVELOPING_NEW_LEVEL) {
+            levelNum = 1;
+        }
 
         var levelFile = new File("level0.tmx");
 
@@ -276,8 +282,8 @@ public class DungeonApp extends GameApplication {
         if (DEVELOPING_NEW_LEVEL && levelFile.exists()) {
 
             try {
-                level = new TMXLevelLoader().load(levelFile.toURI().toURL(), getGameWorld());
-                getGameWorld().setLevel(level);
+//                level = new TMXLevelLoader().load(levelFile.toURI().toURL(), getGameWorld());
+//                getGameWorld().setLevel(level);
 
                 System.out.println("Success");
 
