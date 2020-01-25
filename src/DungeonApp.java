@@ -5,18 +5,15 @@ import com.almasb.fxgl.dsl.components.HealthIntComponent;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.SpawnData;
 import com.almasb.fxgl.entity.level.Level;
-import com.almasb.fxgl.entity.level.tiled.TMXLevelLoader;
 import com.almasb.fxgl.input.UserAction;
 import com.almasb.fxgl.physics.CollisionHandler;
-import com.almasb.fxgl.physics.PhysicsComponent;
 import com.almasb.fxgl.ui.Position;
 import com.almasb.fxgl.ui.ProgressBar;
-import javafx.geometry.Point2D;
+import javafx.scene.PointLight;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
 import java.io.File;
-import java.net.MalformedURLException;
 import java.util.Map;
 
 
@@ -37,8 +34,9 @@ public class DungeonApp extends GameApplication {
 
     private static final int MAX_LEVEL = 1;
     private static final int STARTING_LEVEL = 0;
-    private static final boolean DEVELOPING_NEW_LEVEL = false;
+    private static final boolean DEVELOPING_NEW_LEVEL = true;
     static Entity player;
+    boolean bossBattle = false;
     boolean firstStart = true;
     static boolean left = true;
     static boolean right = true;
@@ -182,6 +180,18 @@ public class DungeonApp extends GameApplication {
             }
         });
 
+        getPhysicsWorld().addCollisionHandler(new CollisionHandler(DungeonType.PlayerBullet, DungeonType.Boss) {
+            @Override
+            protected void onCollisionBegin(Entity PlayerBullet, Entity Boss) {
+                int hp = Boss.getComponent(HealthIntComponent.class).getValue();
+                Boss.getComponent(HealthIntComponent.class).damage(10);
+                PlayerBullet.removeFromWorld();
+                if (hp <= 0) {
+                    Boss.removeFromWorld();
+                }
+            }
+        });
+
         getPhysicsWorld().addCollisionHandler(new CollisionHandler(DungeonType.Player, DungeonType.FirstAid) {
             @Override
             protected void onCollisionBegin(Entity Player, Entity FirstAid) {
@@ -191,6 +201,31 @@ public class DungeonApp extends GameApplication {
                 }
             }
         });
+
+        getPhysicsWorld().addCollisionHandler(new CollisionHandler(DungeonType.BossBattle, DungeonType.Player) {
+            @Override
+            protected void onCollisionBegin(Entity Player, Entity BossBattle) {
+                bossBattle = true;
+            }
+        });
+
+        getPhysicsWorld().addCollisionHandler(new CollisionHandler(DungeonType.Laser, DungeonType.Player) {
+            @Override
+            protected void onCollisionBegin(Entity Laser, Entity Player) {
+                Player.getComponent(HealthIntComponent.class).damage(1);
+                Laser.removeFromWorld();
+                if (Player.getComponent(HealthIntComponent.class).isZero()) {
+                    playerDeath();
+                }
+            }
+        });
+        getPhysicsWorld().addCollisionHandler(new CollisionHandler(DungeonType.Laser, DungeonType.Wall) {
+            @Override
+            protected void onCollisionBegin(Entity Laser, Entity Wall) {
+                Laser.removeFromWorld();
+            }
+        });
+
 
         getPhysicsWorld().addCollisionHandler(new CollisionHandler(DungeonType.EnemyBullet, DungeonType.Player) {
             @Override
@@ -209,7 +244,6 @@ public class DungeonApp extends GameApplication {
                 if (hp <= 0) {
                     Enemy.removeFromWorld();
                 }
-
             }
         });
 
@@ -229,6 +263,13 @@ public class DungeonApp extends GameApplication {
                 });
             }
         });
+    }
+
+    @Override
+    protected void onUpdate(double tpf) {
+        if (bossBattle) {
+            getGameWorld().getSingleton(DungeonType.EnemySpawn).getComponent(EnemySpawn.class).enemySpawn();
+        }
     }
 
 //    public void Respawnlevel(String level) {
@@ -271,7 +312,7 @@ public class DungeonApp extends GameApplication {
 
     public void setLevel(int levelNum) {
         if (DEVELOPING_NEW_LEVEL) {
-            levelNum = 1;
+            levelNum = 2;
         }
 
         var levelFile = new File("level0.tmx");

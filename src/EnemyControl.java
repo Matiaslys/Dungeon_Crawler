@@ -178,7 +178,7 @@ public class EnemyControl extends Component {
 
 
     private void shoot(Entity Player) {
-        if ((DungeonApp.player.getY() - entity.getY() > -surveillanceArea) && (DungeonApp.player.getY() - entity.getY() < surveillanceArea) && (DungeonApp.player.getX() - entity.getX() > -surveillanceArea) && (DungeonApp.player.getX() - entity.getX() < surveillanceArea)) {
+        if ((DungeonApp.player.getY() - entity.getY() > -surveillanceArea) && (DungeonApp.player.getY() - entity.getY() < surveillanceArea) && (DungeonApp.player.getX() - entity.getX() > -surveillanceArea) && (DungeonApp.player.getX() - entity.getX() < surveillanceArea) || FXGL.<DungeonApp>getAppCast().bossBattle) {
             Point2D position = getEntity().getPosition().add(25/2, 39/2);
             SpawnData data = new SpawnData(position);
             Point2D direction = Player.getPosition().subtract(position);

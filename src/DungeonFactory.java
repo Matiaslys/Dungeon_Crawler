@@ -82,6 +82,7 @@ public class DungeonFactory implements EntityFactory {
                 .type(DungeonType.BossBattle)
                 .from(data)
                 .bbox(new HitBox(BoundingShape.box(data.<Integer>get("width") , data.<Integer>get("height"))))
+                .with(new CollidableComponent(true))
                 .build();
 
     }
@@ -92,17 +93,23 @@ public class DungeonFactory implements EntityFactory {
                 .type(DungeonType.EnemySpawn)
                 .from(data)
                 .bbox(new HitBox(BoundingShape.box(data.<Integer>get("width") , data.<Integer>get("height"))))
+                .with(new EnemySpawn())
                 .build();
 
     }
 
     @Spawns("Boss(1)")
     public Entity newBoss (SpawnData data) {
+        PhysicsComponent physics = new PhysicsComponent();
+        physics.setBodyType(BodyType.DYNAMIC);
         return FXGL.entityBuilder()
                 .type(DungeonType.Boss)
                 .from(data)
-                .bbox(new HitBox(BoundingShape.box(data.<Integer>get("width") , data.<Integer>get("height"))))
+//                .bbox(new HitBox(BoundingShape.box(data.<Integer>get("width") , data.<Integer>get("height"))))
+                .viewWithBBox(new Rectangle(11 ,11.5,  Color.RED))
+                .with(new HealthIntComponent(100))
                 .with(new CollidableComponent(true))
+                .with(new BossControl())
                 .build();
 
     }
@@ -155,6 +162,19 @@ public class DungeonFactory implements EntityFactory {
                 .from(data)
                 .type(DungeonType.EnemyBullet)
                 .viewWithBBox(new Rectangle(6.5,1.5, Color.RED))
+                .with(new ProjectileComponent(data.get("direction"), 300))
+                .with(new CollidableComponent(true))
+                .with(new OffscreenCleanComponent())
+                .build();
+    }
+
+    @Spawns("Laser")
+    public Entity newEnemyLaser (SpawnData data) {
+
+        return FXGL.entityBuilder()
+                .from(data)
+                .type(DungeonType.Laser)
+                .viewWithBBox(new Rectangle(5.5,0.5, Color.RED))
                 .with(new ProjectileComponent(data.get("direction"), 300))
                 .with(new CollidableComponent(true))
                 .with(new OffscreenCleanComponent())
