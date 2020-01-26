@@ -1,3 +1,4 @@
+import com.almasb.fxgl.audio.Sound;
 import com.almasb.fxgl.core.math.FXGLMath;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.dsl.components.HealthIntComponent;
@@ -64,6 +65,8 @@ public class PlayerControl extends Component {
 
     public void shoot() {
         if (shootTimer.elapsed(Duration.seconds(0.5))) {
+            Sound sound = getAssetLoader().loadSound("normal (0.38 s).wav");
+            getAudioPlayer().playSound(sound);
         Point2D position = entity.getPosition().add(25/2, 39/2);
         SpawnData data = new SpawnData(position);
         Point2D shootVector = FXGL.getInput().getVectorToMouse(position).normalize();
@@ -94,6 +97,7 @@ public class PlayerControl extends Component {
     }
 
         public void left () {
+            getAudioPlayer().resumeMusic(FXGL.<DungeonApp>getAppCast().music());
             getEntity().setScaleX(-1);
             if (!DungeonApp.left) {
                 physics.setVelocityX(-300);
@@ -103,6 +107,7 @@ public class PlayerControl extends Component {
             }
         }
         public void right () {
+            getAudioPlayer().resumeMusic(FXGL.<DungeonApp>getAppCast().music());
             getEntity().setScaleX(1);
             if (!DungeonApp.right) {
                 physics.setVelocityX(300);
@@ -112,6 +117,7 @@ public class PlayerControl extends Component {
             }
         }
         public void up () {
+            getAudioPlayer().resumeMusic(FXGL.<DungeonApp>getAppCast().music());
             getEntity().setScaleY(-1);
             if (!DungeonApp.up) {
                 physics.setVelocityY(-300);
@@ -121,6 +127,7 @@ public class PlayerControl extends Component {
             }
         }
         public void down () {
+            getAudioPlayer().resumeMusic(FXGL.<DungeonApp>getAppCast().music());
             getEntity().setScaleY(1);
             if (!DungeonApp.down) {
                 physics.setVelocityY(300);

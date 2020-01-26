@@ -1,22 +1,40 @@
+import com.almasb.fxgl.audio.Sound;
+import com.almasb.fxgl.core.math.FXGLMath;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.dsl.components.HealthIntComponent;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.SpawnData;
+import com.almasb.fxgl.physics.PhysicsComponent;
+import com.almasb.fxgl.texture.AnimatedTexture;
+import com.almasb.fxgl.texture.AnimationChannel;
 import com.almasb.fxgl.time.LocalTimer;
 import javafx.geometry.Point2D;
+import javafx.scene.image.Image;
 import javafx.util.Duration;
 import com.almasb.fxgl.entity.component.Component;
 
-import static com.almasb.fxgl.dsl.FXGLForKtKt.getGameWorld;
-import static com.almasb.fxgl.dsl.FXGLForKtKt.spawn;
+import static com.almasb.fxgl.dsl.FXGLForKtKt.*;
+import static com.almasb.fxgl.dsl.FXGLForKtKt.image;
 
 public class BossControl extends Component {
+    private PhysicsComponent physics;
+    Image image = image("Boss(1).png");
+    Image image1 = image("Boss(1)UpDown.png");
     private LocalTimer shootTimer;
+    private AnimatedTexture texture;
+    private AnimationChannel animationUpDown, animationRightLeft;
     private LocalTimer Random;
     private LocalTimer Laser;
 
+    public BossControl(){
+            animationRightLeft = new AnimationChannel(image, 1, 48, 41, Duration.seconds(1), 0,0);
+            animationUpDown = new AnimationChannel(image1, 1, 48, 41, Duration.seconds(1), 0,0);
+            texture = new AnimatedTexture(animationUpDown);
+    }
+
     @Override
     public void onAdded() {
+        entity.getViewComponent().addChild(texture);
         shootTimer = FXGL.newLocalTimer();
         shootTimer.capture();
         Random = FXGL.newLocalTimer();
@@ -27,6 +45,27 @@ public class BossControl extends Component {
 
     @Override
     public void onUpdate(double tpf) {
+        texture.loopAnimationChannel(animationUpDown);
+
+        if ((DungeonApp.player.getY() - entity.getY() > 0) && (DungeonApp.player.getY() - entity.getY() < 150) && (DungeonApp.player.getX() - entity.getX() > -10) && (DungeonApp.player.getX() - entity.getX() < 10)) {
+            getEntity().setScaleY(1);
+            texture.loopAnimationChannel(animationUpDown);
+        }
+        if ((DungeonApp.player.getY() - entity.getY() > -10) && (DungeonApp.player.getY() - entity.getY() < 10) && (DungeonApp.player.getX() - entity.getX() > -150) && (DungeonApp.player.getX() - entity.getX() < 0)) {
+            getEntity().setScaleX(-1);
+            texture.loopAnimationChannel(animationRightLeft);
+
+        }
+        if ((DungeonApp.player.getY() - entity.getY() > -10) && (DungeonApp.player.getY() - entity.getY() < 10) && (DungeonApp.player.getX() - entity.getX() > 0) && (DungeonApp.player.getX() - entity.getX() < 150)) {
+            getEntity().setScaleX(1);
+            texture.loopAnimationChannel(animationRightLeft);
+
+        }
+        if ((DungeonApp.player.getY() - entity.getY() > -150) && (DungeonApp.player.getY() - entity.getY() < 0) && (DungeonApp.player.getX() - entity.getX() > -10) && (DungeonApp.player.getX() - entity.getX() < 10)) {
+            getEntity().setScaleY(1);
+            texture.loopAnimationChannel(animationUpDown);
+        }
+
         if (shootTimer.elapsed(Duration.seconds(2))) {
             if (entity.getComponent(HealthIntComponent.class).getValue() <= 50 && entity.getComponent(HealthIntComponent.class).getValue() > 25) {
 
@@ -55,13 +94,14 @@ public class BossControl extends Component {
                                 shootShotgun(Player);
                                 shootTimer.capture();
                             });
-
             }
         }
     }
 
     private void shootSpread(Entity Player){
         if (Random.elapsed(Duration.seconds(2))) {
+            Sound sound = getAssetLoader().loadSound("normal (0.38 s).wav");
+            getAudioPlayer().playSound(sound);
             int randommovex = (int) (Math.random() * 150 + 1);
             int randommovey = (int) (Math.random() * 50 + 1);
             int randommovex1 = (int) (Math.random() * 150 + 1);
@@ -70,7 +110,7 @@ public class BossControl extends Component {
             int randommovey2 = (int) (Math.random() * 150 + 1);
             int randommovex3 = (int) (Math.random() * -150 + 1);
             int randommovey3 = (int) (Math.random() * 150 + 1);
-            Point2D position = getEntity().getPosition();
+            Point2D position = getEntity().getPosition().add(25/2, 39/2);
             SpawnData data = new SpawnData(position);
             SpawnData data2 = new SpawnData(position);
             SpawnData data3 = new SpawnData(position);
@@ -92,7 +132,9 @@ public class BossControl extends Component {
     }
 
     private void shootShotgun(Entity Player) {
-            Point2D position = getEntity().getPosition();
+        Sound sound = getAssetLoader().loadSound("normal (0.38 s).wav");
+        getAudioPlayer().playSound(sound);
+            Point2D position = getEntity().getPosition().add(25/2, 39/2);
             SpawnData data = new SpawnData(position);
             SpawnData data2 = new SpawnData(position);
             SpawnData data3 = new SpawnData(position);
@@ -116,7 +158,9 @@ public class BossControl extends Component {
     }
 
     private void Laser(Entity Player) {
-        Point2D position = getEntity().getPosition();
+        Sound sound = getAssetLoader().loadSound("normal (0.38 s).wav");
+        getAudioPlayer().playSound(sound);
+        Point2D position = getEntity().getPosition().add(25/2, 39/2);
         SpawnData data = new SpawnData(position);
         Point2D direction = Player.getPosition().subtract(position).add(25/2, 39/2);
         data.put("direction", direction);

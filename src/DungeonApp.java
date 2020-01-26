@@ -1,5 +1,8 @@
-import com.almasb.fxgl.app.GameApplication;
-import com.almasb.fxgl.app.GameSettings;
+import com.almasb.fxgl.app.*;
+import com.almasb.fxgl.audio.Audio;
+import com.almasb.fxgl.audio.AudioType;
+import com.almasb.fxgl.audio.Music;
+import com.almasb.fxgl.audio.Sound;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.dsl.components.HealthIntComponent;
 import com.almasb.fxgl.entity.Entity;
@@ -7,14 +10,17 @@ import com.almasb.fxgl.entity.SpawnData;
 import com.almasb.fxgl.entity.level.Level;
 import com.almasb.fxgl.input.UserAction;
 import com.almasb.fxgl.physics.CollisionHandler;
+import com.almasb.fxgl.time.LocalTimer;
 import com.almasb.fxgl.ui.Position;
 import com.almasb.fxgl.ui.ProgressBar;
-import javafx.scene.PointLight;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
+import javafx.util.Duration;
+import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.util.Map;
+import java.util.Timer;
 
 
 import static com.almasb.fxgl.dsl.FXGLForKtKt.*;
@@ -29,10 +35,24 @@ public class DungeonApp extends GameApplication {
         settings.setHeight(25 * 16);
         settings.setFullScreenAllowed(true);
         settings.setFullScreenFromStart(true);
-        settings.setDeveloperMenuEnabled(true);
+        settings.setDeveloperMenuEnabled(false);
+        settings.setMenuEnabled(true);
+        settings.setSceneFactory(new SceneFactory() {
+            @NotNull
+            @Override
+            public FXGLMenu newMainMenu() {
+                return new MainMenu(MenuType.MAIN_MENU);
+            }
+
+            @NotNull
+            @Override
+            public FXGLMenu newGameMenu() {
+                return new GameMenu(MenuType.GAME_MENU);
+            }
+        });
     }
 
-    private static final int MAX_LEVEL = 1;
+    private static final int MAX_LEVEL = 2;
     private static final int STARTING_LEVEL = 0;
     private static final boolean DEVELOPING_NEW_LEVEL = true;
     static Entity player;
@@ -125,7 +145,7 @@ public class DungeonApp extends GameApplication {
         hpBar.setMinValue(0);
         hpBar.setMaxValue(hp.getValue());
         hpBar.currentValueProperty().bind(hp.valueProperty());
-        hpBar.setLayoutY(10);
+        hpBar.setLayoutY(getAppHeight()-15);
         hpBar.setWidth(50);
         hpBar.setHeight(10);
         hpBar.setLabelVisible(true);
@@ -135,14 +155,18 @@ public class DungeonApp extends GameApplication {
 
         getGameScene().addUINode(hpBar);
 
+
     }
     @Override
     protected void initGameVars(Map<String, Object> vars) {
         vars.put("level", STARTING_LEVEL);
     }
 
+
     @Override
     protected void initGame() {
+        music();
+
         FXGL.getGameWorld().addEntityFactory(new DungeonFactory());
         FXGL.getGameScene().setBackgroundColor(Color.rgb(5, 0, 18));
 
@@ -206,6 +230,24 @@ public class DungeonApp extends GameApplication {
             @Override
             protected void onCollisionBegin(Entity Player, Entity BossBattle) {
                 bossBattle = true;
+
+                HealthIntComponent Bosshp = getGameWorld().getSingleton(DungeonType.Boss).getComponent(HealthIntComponent.class);
+
+                ProgressBar BosshpBar = ProgressBar.makeHPBar();
+                BosshpBar.setMinValue(0);
+                BosshpBar.setMaxValue(Bosshp.getValue());
+                BosshpBar.currentValueProperty().bind(Bosshp.valueProperty());
+                BosshpBar.setLayoutY(5);
+                BosshpBar.setLayoutX(getAppWidth() / 2 - 100);
+                BosshpBar.setWidth(100);
+                BosshpBar.setHeight(10);
+                BosshpBar.setLabelVisible(true);
+                BosshpBar.setLabelPosition(Position.LEFT);
+                BosshpBar.setFill(Color.RED);
+                BosshpBar.setTraceFill(Color.RED.brighter());
+
+                getGameScene().addUINode(BosshpBar);
+
             }
         });
 
@@ -219,13 +261,13 @@ public class DungeonApp extends GameApplication {
                 }
             }
         });
+
         getPhysicsWorld().addCollisionHandler(new CollisionHandler(DungeonType.Laser, DungeonType.Wall) {
             @Override
             protected void onCollisionBegin(Entity Laser, Entity Wall) {
                 Laser.removeFromWorld();
             }
         });
-
 
         getPhysicsWorld().addCollisionHandler(new CollisionHandler(DungeonType.EnemyBullet, DungeonType.Player) {
             @Override
@@ -267,9 +309,17 @@ public class DungeonApp extends GameApplication {
 
     @Override
     protected void onUpdate(double tpf) {
+
         if (bossBattle) {
             getGameWorld().getSingleton(DungeonType.EnemySpawn).getComponent(EnemySpawn.class).enemySpawn();
         }
+    }
+
+    public Music music() {
+        Music music = getAssetLoader().loadMusic("y2mate.com - mutant_year_zero_road_to_eden_full_soundtrack_Jr7dJim426k.mp3");
+        getAudioPlayer().playMusic(music);
+
+        return music;
     }
 
 //    public void Respawnlevel(String level) {
@@ -284,6 +334,10 @@ public class DungeonApp extends GameApplication {
 //    }
 
     public void playerDeath() {
+        getAudioPlayer().pauseMusic(music());
+
+        Sound sound = getAssetLoader().loadSound("y2mate.com - dark_souls_you_died_sound_effect_j_nV2jcTFvA_360p.mp4");
+        getAudioPlayer().playSound(sound);
         getDisplay().showMessageBox("You Died!");
         setLevel(geti("level"));
         SpawnData data = new SpawnData(FXGL.getGameWorld().getSingleton(DungeonType.Spawn).getPosition());

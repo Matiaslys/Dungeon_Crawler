@@ -16,7 +16,7 @@ public class EnemySpawn extends Component {
 
 
     public void enemySpawn() {
-        if (Spawn.elapsed(Duration.seconds(5))){
+        if (Spawn.elapsed(Duration.seconds(MainMenu.EnemySpawn))){
             spawn("Enemy", 409,190.50);
             spawn("Enemy", 59.75,189.75);
             Spawn.capture();

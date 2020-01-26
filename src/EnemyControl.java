@@ -1,4 +1,5 @@
 import com.almasb.fxgl.animation.Interpolators;
+import com.almasb.fxgl.audio.Sound;
 import com.almasb.fxgl.core.math.FXGLMath;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
@@ -179,6 +180,8 @@ public class EnemyControl extends Component {
 
     private void shoot(Entity Player) {
         if ((DungeonApp.player.getY() - entity.getY() > -surveillanceArea) && (DungeonApp.player.getY() - entity.getY() < surveillanceArea) && (DungeonApp.player.getX() - entity.getX() > -surveillanceArea) && (DungeonApp.player.getX() - entity.getX() < surveillanceArea) || FXGL.<DungeonApp>getAppCast().bossBattle) {
+            Sound sound = getAssetLoader().loadSound("normal (0.38 s).wav");
+            getAudioPlayer().playSound(sound);
             Point2D position = getEntity().getPosition().add(25/2, 39/2);
             SpawnData data = new SpawnData(position);
             Point2D direction = Player.getPosition().subtract(position);
