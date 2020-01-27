@@ -97,7 +97,6 @@ public class PlayerControl extends Component {
     }
 
         public void left () {
-            getAudioPlayer().resumeMusic(FXGL.<DungeonApp>getAppCast().music());
             getEntity().setScaleX(-1);
             if (!DungeonApp.left) {
                 physics.setVelocityX(-300);
@@ -107,7 +106,6 @@ public class PlayerControl extends Component {
             }
         }
         public void right () {
-            getAudioPlayer().resumeMusic(FXGL.<DungeonApp>getAppCast().music());
             getEntity().setScaleX(1);
             if (!DungeonApp.right) {
                 physics.setVelocityX(300);
@@ -117,7 +115,6 @@ public class PlayerControl extends Component {
             }
         }
         public void up () {
-            getAudioPlayer().resumeMusic(FXGL.<DungeonApp>getAppCast().music());
             getEntity().setScaleY(-1);
             if (!DungeonApp.up) {
                 physics.setVelocityY(-300);
@@ -127,7 +124,6 @@ public class PlayerControl extends Component {
             }
         }
         public void down () {
-            getAudioPlayer().resumeMusic(FXGL.<DungeonApp>getAppCast().music());
             getEntity().setScaleY(1);
             if (!DungeonApp.down) {
                 physics.setVelocityY(300);

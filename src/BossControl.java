@@ -67,7 +67,7 @@ public class BossControl extends Component {
         }
 
         if (shootTimer.elapsed(Duration.seconds(2))) {
-            if (entity.getComponent(HealthIntComponent.class).getValue() <= 50 && entity.getComponent(HealthIntComponent.class).getValue() > 25) {
+            if (entity.getComponent(HealthIntComponent.class).getValue() <= 75 && entity.getComponent(HealthIntComponent.class).getValue() > 50) {
 
                 FXGL.getGameWorld()
                         .getClosestEntity(entity, e -> e.isType(DungeonType.Player))
@@ -78,7 +78,7 @@ public class BossControl extends Component {
                             shootSpread(Player);
                             shootTimer.capture();
                         });
-            } else if (entity.getComponent(HealthIntComponent.class).getValue() <= 25) {
+            } else if (entity.getComponent(HealthIntComponent.class).getValue() <= 50) {
                 if (Laser.elapsed(Duration.seconds(0))) {
                     FXGL.getGameWorld()
                             .getClosestEntity(entity, e -> e.isType(DungeonType.Player))

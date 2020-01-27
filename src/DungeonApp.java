@@ -1,6 +1,4 @@
 import com.almasb.fxgl.app.*;
-import com.almasb.fxgl.audio.Audio;
-import com.almasb.fxgl.audio.AudioType;
 import com.almasb.fxgl.audio.Music;
 import com.almasb.fxgl.audio.Sound;
 import com.almasb.fxgl.dsl.FXGL;
@@ -8,19 +6,17 @@ import com.almasb.fxgl.dsl.components.HealthIntComponent;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.SpawnData;
 import com.almasb.fxgl.entity.level.Level;
+import com.almasb.fxgl.entity.level.tiled.TMXLevelLoader;
 import com.almasb.fxgl.input.UserAction;
 import com.almasb.fxgl.physics.CollisionHandler;
-import com.almasb.fxgl.time.LocalTimer;
 import com.almasb.fxgl.ui.Position;
 import com.almasb.fxgl.ui.ProgressBar;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
-import javafx.util.Duration;
 import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.util.Map;
-import java.util.Timer;
 
 
 import static com.almasb.fxgl.dsl.FXGLForKtKt.*;
@@ -54,9 +50,10 @@ public class DungeonApp extends GameApplication {
 
     private static final int MAX_LEVEL = 2;
     private static final int STARTING_LEVEL = 0;
-    private static final boolean DEVELOPING_NEW_LEVEL = true;
+    private static final boolean DEVELOPING_NEW_LEVEL = false;
     static Entity player;
     boolean bossBattle = false;
+    boolean bossIsAlive = false;
     boolean firstStart = true;
     static boolean left = true;
     static boolean right = true;
@@ -75,7 +72,7 @@ public class DungeonApp extends GameApplication {
                 up = false;
                 down = false;
             }
-        }, KeyCode.F);
+        }, KeyCode.SPACE);
 
 
         getInput().addAction(new UserAction("Left") {
@@ -210,8 +207,9 @@ public class DungeonApp extends GameApplication {
                 int hp = Boss.getComponent(HealthIntComponent.class).getValue();
                 Boss.getComponent(HealthIntComponent.class).damage(10);
                 PlayerBullet.removeFromWorld();
-                if (hp <= 0) {
+                if (hp <= 10) {
                     Boss.removeFromWorld();
+                    bossIsAlive = false;
                 }
             }
         });
@@ -231,23 +229,25 @@ public class DungeonApp extends GameApplication {
             protected void onCollisionBegin(Entity Player, Entity BossBattle) {
                 bossBattle = true;
 
-                HealthIntComponent Bosshp = getGameWorld().getSingleton(DungeonType.Boss).getComponent(HealthIntComponent.class);
+                if (getGameWorld().getSingleton(DungeonType.Boss).isActive()) {
+                    bossIsAlive = true;
+                    HealthIntComponent Bosshp = getGameWorld().getSingleton(DungeonType.Boss).getComponent(HealthIntComponent.class);
 
-                ProgressBar BosshpBar = ProgressBar.makeHPBar();
-                BosshpBar.setMinValue(0);
-                BosshpBar.setMaxValue(Bosshp.getValue());
-                BosshpBar.currentValueProperty().bind(Bosshp.valueProperty());
-                BosshpBar.setLayoutY(5);
-                BosshpBar.setLayoutX(getAppWidth() / 2 - 100);
-                BosshpBar.setWidth(100);
-                BosshpBar.setHeight(10);
-                BosshpBar.setLabelVisible(true);
-                BosshpBar.setLabelPosition(Position.LEFT);
-                BosshpBar.setFill(Color.RED);
-                BosshpBar.setTraceFill(Color.RED.brighter());
+                    ProgressBar BosshpBar = ProgressBar.makeHPBar();
+                    BosshpBar.setMinValue(0);
+                    BosshpBar.setMaxValue(Bosshp.getValue());
+                    BosshpBar.currentValueProperty().bind(Bosshp.valueProperty());
+                    BosshpBar.setLayoutY(5);
+                    BosshpBar.setLayoutX(getAppWidth() / 2 - 100);
+                    BosshpBar.setWidth(100);
+                    BosshpBar.setHeight(10);
+                    BosshpBar.setLabelVisible(true);
+                    BosshpBar.setLabelPosition(Position.LEFT);
+                    BosshpBar.setFill(Color.RED);
+                    BosshpBar.setTraceFill(Color.RED.brighter());
 
-                getGameScene().addUINode(BosshpBar);
-
+                    getGameScene().addUINode(BosshpBar);
+                }
             }
         });
 
@@ -305,6 +305,25 @@ public class DungeonApp extends GameApplication {
                 });
             }
         });
+
+        getPhysicsWorld().addCollisionHandler(new CollisionHandler(DungeonType.Player, DungeonType.DoorBoss) {
+            @Override
+            protected void onCollisionBegin(Entity Player, Entity DoorBoss) {
+                if (!bossIsAlive) {
+                    int lifeRemaining = player.getComponent(HealthIntComponent.class).getValue();
+                    getGameScene().getViewport().fade(() -> {
+                        nextLevel();
+                        SpawnData data = new SpawnData(FXGL.getGameWorld().getSingleton(DungeonType.Spawn).getPosition());
+                        player = FXGL.getGameWorld().spawn("Player", data);
+                        getGameScene().getViewport().bindToEntity(player, getAppWidth() / 2, getAppHeight() / 2);
+                        FXGL.getPhysicsWorld().setGravity(0, 0);
+                        getGameScene().clearUINodes();
+                        initUI();
+                        player.getComponent(HealthIntComponent.class).setValue(lifeRemaining);
+                    });
+                }
+            }
+        });
     }
 
     @Override
@@ -322,23 +341,14 @@ public class DungeonApp extends GameApplication {
         return music;
     }
 
-//    public void Respawnlevel(String level) {
-//        FXGL.setLevelFromMap(level);
-//
-//        SpawnData data = new SpawnData(FXGL.getGameWorld().getSingleton(DungeonType.Spawn).getPosition());
-//        DungeonApp.player = FXGL.getGameWorld().spawn("Player", data);
-//        getGameScene().getViewport().bindToEntity(DungeonApp.player, getAppWidth() / 2, getAppHeight() / 2);
-//
-//        getGameScene().clearUINodes();
-//        initUI();
-//    }
-
     public void playerDeath() {
         getAudioPlayer().pauseMusic(music());
 
         Sound sound = getAssetLoader().loadSound("y2mate.com - dark_souls_you_died_sound_effect_j_nV2jcTFvA_360p.mp4");
         getAudioPlayer().playSound(sound);
-        getDisplay().showMessageBox("You Died!");
+        getDisplay().showMessageBox("You Died!", () -> {
+            getAudioPlayer().resumeMusic(music());
+        });
         setLevel(geti("level"));
         SpawnData data = new SpawnData(FXGL.getGameWorld().getSingleton(DungeonType.Spawn).getPosition());
         DungeonApp.player = FXGL.getGameWorld().spawn("Player", data);
@@ -350,11 +360,12 @@ public class DungeonApp extends GameApplication {
 
     private void nextLevel() {
         if (geti("level") == MAX_LEVEL) {
-            getDisplay().showMessageBox("You finished the game!");
-            player.removeFromWorld();
+            getDisplay().showMessageBox("You finished the game!", () -> {
+                getGameController().exit();
+            });
+            //player.removeFromWorld();
             return;
         }
-
         // we play test the same level if dev mode
         // so only increase level if release mode
         if (!DEVELOPING_NEW_LEVEL && !firstStart) {
@@ -377,8 +388,8 @@ public class DungeonApp extends GameApplication {
         if (DEVELOPING_NEW_LEVEL && levelFile.exists()) {
 
             try {
-//                level = new TMXLevelLoader().load(levelFile.toURI().toURL(), getGameWorld());
-//                getGameWorld().setLevel(level);
+                level = new TMXLevelLoader().load(levelFile.toURI().toURL(), getGameWorld());
+                getGameWorld().setLevel(level);
 
                 System.out.println("Success");
 

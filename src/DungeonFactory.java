@@ -48,6 +48,19 @@ public class DungeonFactory implements EntityFactory {
 
     }
 
+    @Spawns("DoorBoss")
+    public Entity newDoorBoss (SpawnData data) {
+
+
+        return FXGL.entityBuilder()
+                .type(DungeonType.DoorBoss)
+                .from(data)
+                .bbox(new HitBox(BoundingShape.box(data.<Integer>get("width"), data.<Integer>get("height"))))
+                .with(new CollidableComponent(true))
+                .build();
+
+    }
+
     @Spawns ("Enemy")
     public Entity newEnemy (SpawnData data) {
         PhysicsComponent physics = new PhysicsComponent();
@@ -148,7 +161,7 @@ public class DungeonFactory implements EntityFactory {
         return FXGL.entityBuilder()
                 .from(data)
                 .type(DungeonType.PlayerBullet)
-                .viewWithBBox(new Rectangle(6.5,1.5, Color.BLUE))
+                .viewWithBBox(new Rectangle(8.5,2.5, Color.GREEN))
                 .with(new ProjectileComponent(data.get("direction"), 300))
                 .with(new CollidableComponent(true))
                 .with(new OffscreenCleanComponent())
@@ -161,7 +174,7 @@ public class DungeonFactory implements EntityFactory {
         return FXGL.entityBuilder()
                 .from(data)
                 .type(DungeonType.EnemyBullet)
-                .viewWithBBox(new Rectangle(6.5,1.5, Color.RED))
+                .viewWithBBox(new Rectangle(8.5,2.5, Color.RED))
                 .with(new ProjectileComponent(data.get("direction"), 300))
                 .with(new CollidableComponent(true))
                 .with(new OffscreenCleanComponent())
@@ -178,6 +191,16 @@ public class DungeonFactory implements EntityFactory {
                 .with(new ProjectileComponent(data.get("direction"), 300))
                 .with(new CollidableComponent(true))
                 .with(new OffscreenCleanComponent())
+                .build();
+    }
+    @Spawns("Lampe")
+    public Entity newLampe (SpawnData data) {
+
+        return FXGL.entityBuilder()
+                .type(DungeonType.Lampe)
+                .from(data)
+                .view("lampe.gif")
+                .bbox(new HitBox(BoundingShape.box(data.<Integer>get("width"), data.<Integer>get("height"))))
                 .build();
     }
 
