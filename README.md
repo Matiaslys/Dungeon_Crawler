@@ -13,6 +13,7 @@ You can shoot with your mouse, and by pressing Spacebar you make a little dash i
 You start in something that looks like a cell with no doors, and if you go out of the cell you will meet 4 enemies to fight.
 This is the first map out of three, the second map is big with alot of enemies, around and some medkits which will heal you 50,
 if you walk into them with missing health, and the last map is a boss.
+
 You can download a jar file with the game in releases.
 
 # Assets
