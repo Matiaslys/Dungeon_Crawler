@@ -4,6 +4,7 @@ import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.dsl.components.HealthIntComponent;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.SpawnData;
+import com.almasb.fxgl.entity.components.CollidableComponent;
 import com.almasb.fxgl.physics.PhysicsComponent;
 import com.almasb.fxgl.texture.AnimatedTexture;
 import com.almasb.fxgl.texture.AnimationChannel;
@@ -45,29 +46,18 @@ public class BossControl extends Component {
 
     @Override
     public void onUpdate(double tpf) {
+
         texture.loopAnimationChannel(animationUpDown);
+        Point2D position = getEntity().getPosition().add(25/2, 39/2);
+        Point2D direction = getGameWorld().getSingleton(DungeonType.Player).getPosition().subtract(position);
+        double lookx = direction.getX();
+        double looky = direction.getY();
 
-        if ((DungeonApp.player.getY() - entity.getY() > 0) && (DungeonApp.player.getY() - entity.getY() < 150) && (DungeonApp.player.getX() - entity.getX() > -10) && (DungeonApp.player.getX() - entity.getX() < 10)) {
-            getEntity().setScaleY(1);
-            texture.loopAnimationChannel(animationUpDown);
-        }
-        if ((DungeonApp.player.getY() - entity.getY() > -10) && (DungeonApp.player.getY() - entity.getY() < 10) && (DungeonApp.player.getX() - entity.getX() > -150) && (DungeonApp.player.getX() - entity.getX() < 0)) {
-            getEntity().setScaleX(-1);
-            texture.loopAnimationChannel(animationRightLeft);
-
-        }
-        if ((DungeonApp.player.getY() - entity.getY() > -10) && (DungeonApp.player.getY() - entity.getY() < 10) && (DungeonApp.player.getX() - entity.getX() > 0) && (DungeonApp.player.getX() - entity.getX() < 150)) {
-            getEntity().setScaleX(1);
-            texture.loopAnimationChannel(animationRightLeft);
-
-        }
-        if ((DungeonApp.player.getY() - entity.getY() > -150) && (DungeonApp.player.getY() - entity.getY() < 0) && (DungeonApp.player.getX() - entity.getX() > -10) && (DungeonApp.player.getX() - entity.getX() < 10)) {
-            getEntity().setScaleY(1);
-            texture.loopAnimationChannel(animationUpDown);
-        }
+        double look = Math.atan2(lookx,looky)*180/Math.PI;
+        entity.setRotation(-(look));
 
         if (shootTimer.elapsed(Duration.seconds(2))) {
-            if (entity.getComponent(HealthIntComponent.class).getValue() <= 75 && entity.getComponent(HealthIntComponent.class).getValue() > 50) {
+            if (entity.getComponent(HealthIntComponent.class).getValue() <= 150 && entity.getComponent(HealthIntComponent.class).getValue() > 80) {
 
                 FXGL.getGameWorld()
                         .getClosestEntity(entity, e -> e.isType(DungeonType.Player))
@@ -78,7 +68,7 @@ public class BossControl extends Component {
                             shootSpread(Player);
                             shootTimer.capture();
                         });
-            } else if (entity.getComponent(HealthIntComponent.class).getValue() <= 50) {
+            } else if (entity.getComponent(HealthIntComponent.class).getValue() <= 80) {
                 if (Laser.elapsed(Duration.seconds(0))) {
                     FXGL.getGameWorld()
                             .getClosestEntity(entity, e -> e.isType(DungeonType.Player))

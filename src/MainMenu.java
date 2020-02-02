@@ -16,6 +16,9 @@ public class MainMenu extends FXGLMenu {
     static int healthPlayer;
     static int healthEnemy;
     static int EnemySpawn;
+    static int bulletSpeed;
+    static double bulletTimer;
+    static int BossHealth;
     public MainMenu(MenuType type) {
         super(type);
 
@@ -56,7 +59,12 @@ public class MainMenu extends FXGLMenu {
 
             healthEnemy = 1;
             healthPlayer = 200;
-            EnemySpawn = 10;
+            EnemySpawn = 5;
+            bulletSpeed = 150;
+            bulletTimer = 2;
+            BossHealth = 300;
+            DungeonApp.firstStart = true;
+
             getMenuRoot().getChildren().set(0, vBox1);
         });
 
@@ -68,7 +76,11 @@ public class MainMenu extends FXGLMenu {
 
             healthEnemy = 2;
             healthPlayer = 150;
-            EnemySpawn = 7;
+            EnemySpawn = 5;
+            bulletSpeed = 225;
+            bulletTimer = 1.50;
+            BossHealth = 250;
+            DungeonApp.firstStart = true;
             getMenuRoot().getChildren().set(0, vBox1);
         });
 
@@ -81,6 +93,10 @@ public class MainMenu extends FXGLMenu {
             healthEnemy = 3;
             healthPlayer = 100;
             EnemySpawn = 5;
+            bulletSpeed = 300;
+            bulletTimer = 1;
+            BossHealth = 200;
+            DungeonApp.firstStart = true;
             getMenuRoot().getChildren().set(0, vBox1);
         });
 

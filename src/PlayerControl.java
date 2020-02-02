@@ -5,6 +5,7 @@ import com.almasb.fxgl.dsl.components.HealthIntComponent;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.SpawnData;
 import com.almasb.fxgl.entity.component.Component;
+import com.almasb.fxgl.entity.components.CollidableComponent;
 import com.almasb.fxgl.physics.PhysicsComponent;
 import com.almasb.fxgl.texture.AnimatedTexture;
 import com.almasb.fxgl.texture.AnimationChannel;
@@ -19,20 +20,17 @@ import static com.almasb.fxgl.dsl.FXGLForKtKt.*;
 
 
 public class PlayerControl extends Component {
-    Image image = image("Player.png");
-    Image image2 = image("Up,Down(player).png");
-    Image image3 = image("Shoot Down,Up(player).png");
+    Image image = image("Up,Down(player).png");
+    Image image1 = image("Shoot Down,Up(player).png");
     private PhysicsComponent physics;
     private AnimatedTexture texture;
-    private AnimationChannel animationRightLeft, animationShotRightLeft, animationUpDown,animationshotUpDown;
+    private AnimationChannel animationUpDown,animationshotUpDown;
     private LocalTimer shootTimer;
     private LocalTimer dash;
 
     public PlayerControl() {
-        animationRightLeft = new AnimationChannel(image, 2, 74/2, 39, Duration.seconds(1), 0,0);
-        animationShotRightLeft = new AnimationChannel(image, 2 , 74/2,39, Duration.seconds(1),1,1);
-        animationUpDown = new AnimationChannel(image2, 1 , 30,39, Duration.seconds(1),0,0);
-        animationshotUpDown = new AnimationChannel(image3, 1 , 43,39, Duration.seconds(1),0,0);
+        animationUpDown = new AnimationChannel(image, 1 , 30,39, Duration.seconds(1),0,0);
+        animationshotUpDown = new AnimationChannel(image1, 1 , 43,39, Duration.seconds(1),0,0);
 
         texture = new AnimatedTexture(animationUpDown);
     }
@@ -48,11 +46,13 @@ public class PlayerControl extends Component {
 
     @Override
     public void onUpdate(double tpf) {
-        if (FXGLMath.abs(physics.getVelocityX()) > 0) {
-            texture.loopAnimationChannel(animationRightLeft);
-        } else if (FXGLMath.abs(physics.getVelocityY()) > 0) {
-            texture.loopAnimationChannel(animationUpDown);
-        }
+        Point2D position = entity.getPosition().add(25/2, 39/2);
+        Point2D shootVector = FXGL.getInput().getVectorToMouse(position);
+        double lookx = shootVector.getX();
+        double looky = shootVector.getY();
+
+        double look = Math.atan2(lookx,looky)*180/Math.PI;
+        entity.setRotation(-(look));
         if (dash.elapsed(Duration.seconds(0.3))) {
             DungeonApp.left = true;
             DungeonApp.right = true;
@@ -60,8 +60,11 @@ public class PlayerControl extends Component {
             DungeonApp.down = true;
             dash.capture();
         }
+        FXGL.runOnce(() -> {
+            if (!DungeonApp.shoot) {
+                texture.loopAnimationChannel(animationUpDown);
+            }}, Duration.seconds(1.5));
     }
-
 
     public void shoot() {
         if (shootTimer.elapsed(Duration.seconds(0.5))) {
@@ -70,26 +73,7 @@ public class PlayerControl extends Component {
         Point2D position = entity.getPosition().add(25/2, 39/2);
         SpawnData data = new SpawnData(position);
         Point2D shootVector = FXGL.getInput().getVectorToMouse(position).normalize();
-            //down
-            if ((FXGL.getInput().getMouseYWorld() - entity.getY() > 0) && (FXGL.getInput().getMouseXWorld() - entity.getX() > -100) && (FXGL.getInput().getMouseYWorld() - entity.getX() < 150)) {
-                texture.loopAnimationChannel(animationshotUpDown);
-                getEntity().setScaleY(1);
-            }
-            //left
-            if ((FXGL.getInput().getMouseYWorld() - entity.getY() > -100) && (FXGL.getInput().getMouseYWorld() - entity.getY() < 150) && (FXGL.getInput().getMouseYWorld() - entity.getX() < 0)) {
-                texture.loopAnimationChannel(animationShotRightLeft);
-                getEntity().setScaleX(-1);
-            }
-            //right
-            if ((FXGL.getInput().getMouseYWorld() - entity.getY() > -100) && (FXGL.getInput().getMouseYWorld() - entity.getY() < 150) && (FXGL.getInput().getMouseXWorld() - entity.getX() > 0)) {
-                texture.loopAnimationChannel(animationShotRightLeft);
-                getEntity().setScaleX(1);
-            }
-            //up
-            if ((FXGL.getInput().getMouseYWorld() - entity.getY() < 0) && (FXGL.getInput().getMouseXWorld() - entity.getX() > -100) && (FXGL.getInput().getMouseYWorld() - entity.getX() < 150)) {
-                texture.loopAnimationChannel(animationshotUpDown);
-                getEntity().setScaleY(-1);
-            }
+        texture.loopAnimationChannel(animationshotUpDown);
             data.put("direction", shootVector);
         Entity bullet = FXGL.spawn("PlayerBullet", data);
             shootTimer.capture();
@@ -97,7 +81,6 @@ public class PlayerControl extends Component {
     }
 
         public void left () {
-            getEntity().setScaleX(-1);
             if (!DungeonApp.left) {
                 physics.setVelocityX(-300);
             }
@@ -106,7 +89,6 @@ public class PlayerControl extends Component {
             }
         }
         public void right () {
-            getEntity().setScaleX(1);
             if (!DungeonApp.right) {
                 physics.setVelocityX(300);
             }
@@ -115,7 +97,6 @@ public class PlayerControl extends Component {
             }
         }
         public void up () {
-            getEntity().setScaleY(-1);
             if (!DungeonApp.up) {
                 physics.setVelocityY(-300);
             }
@@ -124,7 +105,6 @@ public class PlayerControl extends Component {
             }
         }
         public void down () {
-            getEntity().setScaleY(1);
             if (!DungeonApp.down) {
                 physics.setVelocityY(300);
             }

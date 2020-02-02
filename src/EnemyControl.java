@@ -2,11 +2,16 @@ import com.almasb.fxgl.animation.Interpolators;
 import com.almasb.fxgl.audio.Sound;
 import com.almasb.fxgl.core.math.FXGLMath;
 import com.almasb.fxgl.dsl.FXGL;
+import com.almasb.fxgl.dsl.components.HealthIntComponent;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.SpawnData;
 import com.almasb.fxgl.entity.component.Component;
+import com.almasb.fxgl.entity.components.CollidableComponent;
+import com.almasb.fxgl.entity.components.ObjectComponent;
 import com.almasb.fxgl.entity.level.Level;
 import com.almasb.fxgl.pathfinding.astar.*;
+import com.almasb.fxgl.physics.BoundingShape;
+import com.almasb.fxgl.physics.HitBox;
 import com.almasb.fxgl.physics.PhysicsComponent;
 import com.almasb.fxgl.texture.AnimatedTexture;
 import com.almasb.fxgl.texture.AnimationChannel;
@@ -26,6 +31,7 @@ public class EnemyControl extends Component {
     Image image = image("Right,Left.png");
     Image image1 = image("Up,Down.png");
     Image image2 = image("Up,idle.png");
+
     private PhysicsComponent physics;
     private LocalTimer shootTimer;
     private LocalTimer move;
@@ -33,7 +39,8 @@ public class EnemyControl extends Component {
     private AnimatedTexture texture;
     private AnimationChannel animationDown, animationRightLeft, animationUp;
     private int surveillanceArea = 150;
-    private boolean stop = false;
+    static boolean stop = false;
+
 
 
     public EnemyControl() {
@@ -42,16 +49,6 @@ public class EnemyControl extends Component {
         animationUp = new AnimationChannel(image2, 1, 37, 29, Duration.seconds(1), 0,0);
         texture = new AnimatedTexture(animationUp);
     }
-
-
-    public void StopMove() {
-        stop = true;
-        leftStop();
-        rightStop();
-        upStop();
-        downStop();
-    }
-
 
     @Override
     public void onAdded() {
@@ -65,21 +62,49 @@ public class EnemyControl extends Component {
     }
 
 
+    public void EnemyHit() {
+        entity.getComponent(HealthIntComponent.class).damage(1);
+        if (entity.getComponent(HealthIntComponent.class).isZero()) {
+            Point2D position = entity.getPosition();
+            entity.removeFromWorld();
+            int killLevel = DungeonApp.level;
+            spawn("EnemyDead", position);
+            FXGL.runOnce(() -> {
+                if (DungeonApp.level == killLevel && getGameWorld().getSingleton(DungeonType.Player).getComponent(HealthIntComponent.class).getValue() < MainMenu.healthPlayer) {
+                    getGameWorld().getSingleton(DungeonType.EnemyDead).removeFromWorld();
+                }
+            }, Duration.seconds(5));
+        }
+    }
+
+    public void StopMove() {
+        leftStop();
+        rightStop();
+        upStop();
+        downStop();
+    }
+
     @Override
     public void onUpdate(double tpf) {
+
         if (FXGLMath.abs(physics.getVelocityX()) > 0) {
                 texture.loopAnimationChannel(animationRightLeft);
         } else if (FXGLMath.abs(physics.getVelocityY()) > 0) {
             texture.loopAnimationChannel(animationDown);
         }
+
         // Ai shoot player
-        if (shootTimer.elapsed(Duration.seconds(0.5))) {
+        if (shootTimer.elapsed(Duration.seconds(MainMenu.bulletTimer))) {
             FXGL.getGameWorld()
                     .getClosestEntity(entity, e -> e.isType(DungeonType.Player))
                     .ifPresent(Player -> {
                         shoot(Player);
                         shootTimer.capture();
                     });
+        }
+
+        if (!(DungeonApp.player.getY() - entity.getY() > -surveillanceArea) && (DungeonApp.player.getY() - entity.getY() < surveillanceArea) && (DungeonApp.player.getX() - entity.getX() > -surveillanceArea) && (DungeonApp.player.getX() - entity.getX() < surveillanceArea) && stop) {
+            stop = false;
         }
         // Ai movement
         int randommove = (int) (Math.random() * 4 + 1);
@@ -114,36 +139,36 @@ public class EnemyControl extends Component {
                 }
                 move.capture();
                 movestop.capture();
-            }
-            else if  ((DungeonApp.player.getY() - entity.getY() > -surveillanceArea) && (DungeonApp.player.getY() - entity.getY() < surveillanceArea) && (DungeonApp.player.getX() - entity.getX() > -surveillanceArea) && (DungeonApp.player.getX() - entity.getX() < surveillanceArea)) {
+            } else if ((DungeonApp.player.getY() - entity.getY() > -surveillanceArea) && (DungeonApp.player.getY() - entity.getY() < surveillanceArea) && (DungeonApp.player.getX() - entity.getX() > -surveillanceArea) && (DungeonApp.player.getX() - entity.getX() < surveillanceArea)) {
+                Point2D position = getEntity().getPosition().add(25/2, 39/2);
+                Point2D direction = getGameWorld().getSingleton(DungeonType.Player).getPosition().subtract(position);
+                double lookx = direction.getX();
+                double looky = direction.getY();
 
-                if ((DungeonApp.player.getY() - entity.getY() > 0) && (DungeonApp.player.getY() - entity.getY() < 150) && (DungeonApp.player.getX() - entity.getX() > -10) && (DungeonApp.player.getX() - entity.getX() < 10)) {
-                    StopMove();
+                double look = Math.atan2(lookx,looky)*180/Math.PI;
+                if (texture.getAnimationChannel() == animationUp){
+                    entity.setRotation(-(look + 180));
+                }
+                if (texture.getAnimationChannel() == animationDown && getEntity().getScaleY() == -1){
+                    entity.setRotation(-(look));
                     getEntity().setScaleY(1);
-                    texture.loopAnimationChannel(animationDown);
                 }
-                if ((DungeonApp.player.getY() - entity.getY() > -10) && (DungeonApp.player.getY() - entity.getY() < 10) && (DungeonApp.player.getX() - entity.getX() > -150) && (DungeonApp.player.getX() - entity.getX() < 0)) {
-                    StopMove();
-                    getEntity().setScaleX(-1);
-                    texture.loopAnimationChannel(animationRightLeft);
-
+                if (texture.getAnimationChannel() == animationDown){
+                    entity.setRotation(-(look));
                 }
-                if ((DungeonApp.player.getY() - entity.getY() > -10) && (DungeonApp.player.getY() - entity.getY() < 10) && (DungeonApp.player.getX() - entity.getX() > 0) && (DungeonApp.player.getX() - entity.getX() < 150)) {
-                    StopMove();
-                    getEntity().setScaleX(1);
-                    texture.loopAnimationChannel(animationRightLeft);
-
+                if (texture.getAnimationChannel() == animationRightLeft){
+                    entity.setRotation(-(look) + 90);
                 }
-                if ((DungeonApp.player.getY() - entity.getY() > -150) && (DungeonApp.player.getY() - entity.getY() < 0) && (DungeonApp.player.getX() - entity.getX() > -10) && (DungeonApp.player.getX() - entity.getX() < 10)) {
-                    StopMove();
-                    getEntity().setScaleY(1);
-                    texture.loopAnimationChannel(animationUp);
+                if (texture.getAnimationChannel() == animationRightLeft && getEntity().getScaleX() == -1){
+                    entity.setRotation(-(look) + 270);
                 }
 
-        } else if (!(DungeonApp.player.getY() - entity.getY() > -surveillanceArea) && (DungeonApp.player.getY() - entity.getY() < surveillanceArea) && (DungeonApp.player.getX() - entity.getX() > -surveillanceArea) && (DungeonApp.player.getX() - entity.getX() < surveillanceArea)) {
-            stop = false;
             }
-    }
+            if (physics.getVelocityY() > 41 ||physics.getVelocityY() < -41 || physics.getVelocityX() > 41 ||physics.getVelocityX() < -41){
+                StopMove();
+            }
+
+        }
 
     public void left () {
         getEntity().setScaleX(-1);

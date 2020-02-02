@@ -13,6 +13,7 @@ import com.almasb.fxgl.physics.BoundingShape;
 import com.almasb.fxgl.physics.HitBox;
 import com.almasb.fxgl.physics.PhysicsComponent;
 import com.almasb.fxgl.physics.box2d.dynamics.BodyType;
+import com.almasb.fxgl.physics.box2d.dynamics.FixtureDef;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
@@ -65,19 +66,31 @@ public class DungeonFactory implements EntityFactory {
     public Entity newEnemy (SpawnData data) {
         PhysicsComponent physics = new PhysicsComponent();
         physics.setBodyType(BodyType.DYNAMIC);
-//        physics.setFixtureDef(new FixtureDef().density(100000));
-
         return FXGL.entityBuilder()
                 .from(data)
                 .type(DungeonType.Enemy)
                 .bbox(new HitBox(BoundingShape.box(25,29)))
-//                .viewWithBBox(new Rectangle(11 ,11.5,  Color.RED))
                 .with(physics)
                 .with(new HealthIntComponent(MainMenu.healthEnemy))
                 .with(new CollidableComponent(true))
                 .with(new EnemyControl())
                 .build();
     }
+
+    @Spawns ("EnemyDead")
+    public Entity newEnemyDead (SpawnData data) {
+        PhysicsComponent physics = new PhysicsComponent();
+        physics.setBodyType(BodyType.DYNAMIC);
+        return FXGL.entityBuilder()
+                .from(data)
+                .type(DungeonType.EnemyDead)
+                .bbox(new HitBox(BoundingShape.box(52,29)))
+                .with(physics)
+                .with(new CollidableComponent(true))
+                .with(new EnemeyDeadControl())
+                .build();
+    }
+
 
     @Spawns("Spawn")
     public Entity newSpawn (SpawnData data) {
@@ -114,12 +127,12 @@ public class DungeonFactory implements EntityFactory {
     public Entity newBoss (SpawnData data) {
         PhysicsComponent physics = new PhysicsComponent();
         physics.setBodyType(BodyType.DYNAMIC);
+        physics.setFixtureDef(new FixtureDef().density(100000));
         return FXGL.entityBuilder()
                 .from(data)
                 .type(DungeonType.Boss)
                 .bbox(new HitBox(BoundingShape.box(48 , 41)))
-//                .viewWithBBox(new Rectangle(11 ,11.5,  Color.RED))
-                .with(new HealthIntComponent(100))
+                .with(new HealthIntComponent(MainMenu.BossHealth))
                 .with(physics)
                 .with(new CollidableComponent(true))
                 .with(new BossControl())
@@ -148,7 +161,6 @@ public class DungeonFactory implements EntityFactory {
                 .from(data)
                 .type(DungeonType.Player)
                 .bbox(new HitBox(BoundingShape.box(25,39)))
-//                .viewWithBBox(new Rectangle(12.50, 13, Color.BLUE))
                 .with(physics)
                 .with(new HealthIntComponent(MainMenu.healthPlayer))
                 .with(new CollidableComponent(true))
@@ -175,7 +187,7 @@ public class DungeonFactory implements EntityFactory {
                 .from(data)
                 .type(DungeonType.EnemyBullet)
                 .viewWithBBox(new Rectangle(8.5,2.5, Color.RED))
-                .with(new ProjectileComponent(data.get("direction"), 300))
+                .with(new ProjectileComponent(data.get("direction"), MainMenu.bulletSpeed))
                 .with(new CollidableComponent(true))
                 .with(new OffscreenCleanComponent())
                 .build();
@@ -187,8 +199,8 @@ public class DungeonFactory implements EntityFactory {
         return FXGL.entityBuilder()
                 .from(data)
                 .type(DungeonType.Laser)
-                .viewWithBBox(new Rectangle(5.5,0.5, Color.RED))
-                .with(new ProjectileComponent(data.get("direction"), 300))
+                .viewWithBBox(new Rectangle(6.5,0.5, Color.RED))
+                .with(new ProjectileComponent(data.get("direction"), MainMenu.bulletSpeed))
                 .with(new CollidableComponent(true))
                 .with(new OffscreenCleanComponent())
                 .build();
@@ -203,5 +215,4 @@ public class DungeonFactory implements EntityFactory {
                 .bbox(new HitBox(BoundingShape.box(data.<Integer>get("width"), data.<Integer>get("height"))))
                 .build();
     }
-
 }

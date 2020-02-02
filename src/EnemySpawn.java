@@ -3,6 +3,7 @@ import com.almasb.fxgl.entity.component.Component;
 import com.almasb.fxgl.time.LocalTimer;
 import javafx.util.Duration;
 
+import static com.almasb.fxgl.dsl.FXGLForKtKt.getGameWorld;
 import static com.almasb.fxgl.dsl.FXGLForKtKt.spawn;
 
 public class EnemySpawn extends Component {
@@ -13,6 +14,15 @@ public class EnemySpawn extends Component {
         Spawn = FXGL.newLocalTimer();
         Spawn.capture();
     }
+
+    @Override
+    public void onUpdate(double tpf) {
+
+        if (FXGL.<DungeonApp>getAppCast().bossBattle) {
+            getGameWorld().getSingleton(DungeonType.EnemySpawn).getComponent(EnemySpawn.class).enemySpawn();
+        }
+    }
+
 
 
     public void enemySpawn() {

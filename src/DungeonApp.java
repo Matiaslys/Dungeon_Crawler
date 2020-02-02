@@ -14,6 +14,7 @@ import com.almasb.fxgl.ui.ProgressBar;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
+import javafx.util.Duration;
 import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.util.Map;
@@ -54,12 +55,12 @@ public class DungeonApp extends GameApplication {
     static Entity player;
     boolean bossBattle = false;
     boolean bossIsAlive = false;
-    boolean firstStart = true;
+    static boolean firstStart;
     static boolean left = true;
     static boolean right = true;
     static boolean up = true;
     static boolean down = true;
-
+    static boolean shoot = false;
 
     @Override
     protected void initInput() {
@@ -129,6 +130,10 @@ public class DungeonApp extends GameApplication {
             @Override
             protected void onAction() {
                 player.getComponent(PlayerControl.class).shoot();
+                shoot = true;
+                FXGL.runOnce(() -> {
+                        shoot = false;
+                    }, Duration.seconds(1));
             }
         }, MouseButton.PRIMARY);
     }
@@ -163,18 +168,9 @@ public class DungeonApp extends GameApplication {
     @Override
     protected void initGame() {
         music();
-
         FXGL.getGameWorld().addEntityFactory(new DungeonFactory());
         FXGL.getGameScene().setBackgroundColor(Color.rgb(5, 0, 18));
 
-//        var levelFile = new File("C:\\Users\\matia\\IdeaProjects\\Dungeon Crawler\\src\\assets\\levels\\level0.tmx");
-//        Level level;
-//        try {
-//            level = new TMXLevelLoader().load(levelFile.toURI().toURL(), FXGL.getGameWorld());
-//            FXGL.getGameWorld().setLevel(level);
-//        } catch (MalformedURLException e) {
-//            e.printStackTrace();
-//        }
 
         nextLevel();
 
@@ -205,10 +201,13 @@ public class DungeonApp extends GameApplication {
             @Override
             protected void onCollisionBegin(Entity PlayerBullet, Entity Boss) {
                 int hp = Boss.getComponent(HealthIntComponent.class).getValue();
-                Boss.getComponent(HealthIntComponent.class).damage(10);
+                if (bossBattle) {
+                    Boss.getComponent(HealthIntComponent.class).damage(10);
+                }
                 PlayerBullet.removeFromWorld();
                 if (hp <= 10) {
                     Boss.removeFromWorld();
+
                     bossIsAlive = false;
                 }
             }
@@ -227,13 +226,14 @@ public class DungeonApp extends GameApplication {
         getPhysicsWorld().addCollisionHandler(new CollisionHandler(DungeonType.BossBattle, DungeonType.Player) {
             @Override
             protected void onCollisionBegin(Entity Player, Entity BossBattle) {
-                bossBattle = true;
 
-                if (getGameWorld().getSingleton(DungeonType.Boss).isActive()) {
+                if (!bossBattle) {
+                    bossBattle = true;
                     bossIsAlive = true;
                     HealthIntComponent Bosshp = getGameWorld().getSingleton(DungeonType.Boss).getComponent(HealthIntComponent.class);
 
                     ProgressBar BosshpBar = ProgressBar.makeHPBar();
+                    getGameScene().removeUINode(BosshpBar);
                     BosshpBar.setMinValue(0);
                     BosshpBar.setMaxValue(Bosshp.getValue());
                     BosshpBar.currentValueProperty().bind(Bosshp.valueProperty());
@@ -247,6 +247,7 @@ public class DungeonApp extends GameApplication {
                     BosshpBar.setTraceFill(Color.RED.brighter());
 
                     getGameScene().addUINode(BosshpBar);
+
                 }
             }
         });
@@ -280,12 +281,9 @@ public class DungeonApp extends GameApplication {
         getPhysicsWorld().addCollisionHandler(new CollisionHandler(DungeonType.PlayerBullet, DungeonType.Enemy) {
             @Override
             protected void onCollisionBegin(Entity PlayerBullet, Entity Enemy) {
-                Enemy.getComponent(HealthIntComponent.class).damage(1);
-                int hp = Enemy.getComponent(HealthIntComponent.class).getValue();
                 PlayerBullet.removeFromWorld();
-                if (hp <= 0) {
-                    Enemy.removeFromWorld();
-                }
+
+                Enemy.getComponent(EnemyControl.class).EnemyHit();
             }
         });
 
@@ -326,13 +324,6 @@ public class DungeonApp extends GameApplication {
         });
     }
 
-    @Override
-    protected void onUpdate(double tpf) {
-
-        if (bossBattle) {
-            getGameWorld().getSingleton(DungeonType.EnemySpawn).getComponent(EnemySpawn.class).enemySpawn();
-        }
-    }
 
     public Music music() {
         Music music = getAssetLoader().loadMusic("y2mate.com - mutant_year_zero_road_to_eden_full_soundtrack_Jr7dJim426k.mp3");
@@ -355,13 +346,14 @@ public class DungeonApp extends GameApplication {
         getGameScene().getViewport().bindToEntity(DungeonApp.player, getAppWidth() / 2, getAppHeight() / 2);
 
         getGameScene().clearUINodes();
+        bossBattle = false;
         initUI();
     }
-
+    static int level = 0;
     private void nextLevel() {
         if (geti("level") == MAX_LEVEL) {
             getDisplay().showMessageBox("You finished the game!", () -> {
-                getGameController().exit();
+                getGameController().gotoMainMenu();
             });
             //player.removeFromWorld();
             return;
@@ -370,6 +362,7 @@ public class DungeonApp extends GameApplication {
         // so only increase level if release mode
         if (!DEVELOPING_NEW_LEVEL && !firstStart) {
             inc("level", +1);
+            level++;
         }
         firstStart = false;
         setLevel(geti("level"));
@@ -401,6 +394,8 @@ public class DungeonApp extends GameApplication {
         }
 
     }
+
+
     public static void main (String[]args){
         launch(args);
     }
