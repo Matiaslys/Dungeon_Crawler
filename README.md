@@ -19,3 +19,4 @@ You can download a jar file with the game in releases.
 # Assets
 
 Most of the assets is from this weebsite https://www.spriters-resource.com/.
+Background Music is from the game Mutant Year ZeroM: Road to Eden, and can be found here https://www.youtube.com/watch?v=Jr7dJim426k.
